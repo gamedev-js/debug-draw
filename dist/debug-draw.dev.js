@@ -5,143 +5,11 @@
  * Released under the MIT License.
  */
 
-(function (exports,vmath) {
+(function (exports,vmath,REGL,Input) {
 'use strict';
 
-function common(regl) {
-  return regl({
-    uniforms: {
-      view: regl.prop('view'),
-      projection: regl.prop('projection')
-    }
-  });
-}
-
-function grid(regl, width, length, seg) {
-  let vertices = [];
-  let identity = vmath.mat4.array(new Float32Array(16), vmath.mat4.create());
-
-  let hw = width * 0.5;
-  let hl = length * 0.5;
-  let dw = width / seg;
-  let dl = length / seg;
-
-  for (let x = -hw; x <= hw; x += dw) {
-    vertices.push(x, 0, -hl);
-    vertices.push(x, 0, hl);
-  }
-
-  for (let z = -hl; z <= hl; z += dl) {
-    vertices.push(-hw, 0, z);
-    vertices.push(hw, 0, z);
-  }
-
-  return regl({
-    blend: {
-      enable: true,
-      func: {
-        srcRGB: 'src alpha',
-        srcAlpha: 1,
-        dstRGB: 'one minus src alpha',
-        dstAlpha: 1
-      },
-      equation: {
-        rgb: 'add',
-        alpha: 'add'
-      },
-      color: [0, 0, 0, 0]
-    },
-
-    vert: `
-      precision mediump float;
-      uniform mat4 model, view, projection;
-
-      attribute vec3 a_pos;
-
-      void main() {
-        vec4 pos = projection * view * model * vec4(a_pos, 1);
-
-        gl_Position = pos;
-      }
-    `,
-
-    frag: `
-      precision mediump float;
-
-      void main () {
-        gl_FragColor = vec4(0.5, 0.5, 0.5, 0.5);
-      }
-    `,
-
-    primitive: 'lines',
-
-    attributes: {
-      a_pos: vertices,
-    },
-
-    uniforms: {
-      model: identity,
-    },
-
-    count: vertices.length / 3
-  });
-}
-
-function coord (regl) {
-  let drawLine = regl({
-    vert: `
-      precision mediump float;
-      uniform mat4 model, view, projection;
-
-      attribute vec3 a_pos;
-
-      void main() {
-        vec4 pos = projection * view * model * vec4(a_pos, 1);
-
-        gl_Position = pos;
-      }
-    `,
-
-    frag: `
-      precision mediump float;
-      uniform vec3 color;
-
-      void main () {
-        gl_FragColor = vec4(color, 1.0);
-      }
-    `,
-
-    primitive: 'lines',
-
-    attributes: {
-      a_pos: regl.prop('line'),
-    },
-
-    uniforms: {
-      model: regl.prop('transform'),
-      color: regl.prop('color')
-    },
-
-    count: 2,
-  });
-
-  const identity = vmath.mat4.array(new Float32Array(16), vmath.mat4.create());
-  const line_x = [ [0, 0, 0], [1, 0, 0] ];
-  const line_y = [ [0, 0, 0], [0, 1, 0] ];
-  const line_z = [ [0, 0, 0], [0, 0, 1] ];
-  const color_r = [1, 0, 0];
-  const color_g = [0, 1, 0];
-  const color_b = [0, 0, 1];
-
-  return function (transform) {
-    transform = transform || identity;
-    drawLine([
-      { line: line_x, color: color_r, transform },
-      { line: line_y, color: color_g, transform },
-      { line: line_z, color: color_b, transform },
-    ]);
-  };
-}
+REGL = 'default' in REGL ? REGL['default'] : REGL;
+Input = 'default' in Input ? Input['default'] : Input;
 
 let damping = 10.0;
 let moveSpeed = 10.0;
@@ -320,10 +188,270 @@ class Orbit {
   }
 }
 
-exports.common = common;
-exports.grid = grid;
-exports.coord = coord;
-exports.Orbit = Orbit;
+function common(regl) {
+  return regl({
+    uniforms: {
+      view: regl.prop('view'),
+      projection: regl.prop('projection')
+    }
+  });
+}
 
-}((this.ddraw = this.ddraw || {}),window.vmath));
+function grid(regl, width, length, seg) {
+  let vertices = [];
+  let identity = vmath.mat4.array(new Float32Array(16), vmath.mat4.create());
+
+  let hw = width * 0.5;
+  let hl = length * 0.5;
+  let dw = width / seg;
+  let dl = length / seg;
+
+  for (let x = -hw; x <= hw; x += dw) {
+    vertices.push(x, 0, -hl);
+    vertices.push(x, 0, hl);
+  }
+
+  for (let z = -hl; z <= hl; z += dl) {
+    vertices.push(-hw, 0, z);
+    vertices.push(hw, 0, z);
+  }
+
+  return regl({
+    blend: {
+      enable: true,
+      func: {
+        srcRGB: 'src alpha',
+        srcAlpha: 1,
+        dstRGB: 'one minus src alpha',
+        dstAlpha: 1
+      },
+      equation: {
+        rgb: 'add',
+        alpha: 'add'
+      },
+      color: [0, 0, 0, 0]
+    },
+
+    vert: `
+      precision mediump float;
+      uniform mat4 model, view, projection;
+
+      attribute vec3 a_pos;
+
+      void main() {
+        vec4 pos = projection * view * model * vec4(a_pos, 1);
+
+        gl_Position = pos;
+      }
+    `,
+
+    frag: `
+      precision mediump float;
+
+      void main () {
+        gl_FragColor = vec4(0.5, 0.5, 0.5, 0.5);
+      }
+    `,
+
+    primitive: 'lines',
+
+    attributes: {
+      a_pos: vertices,
+    },
+
+    uniforms: {
+      model: identity,
+    },
+
+    count: vertices.length / 3
+  });
+}
+
+function coord (regl) {
+  let drawLine = regl({
+    vert: `
+      precision mediump float;
+      uniform mat4 model, view, projection;
+
+      attribute vec3 a_pos;
+
+      void main() {
+        vec4 pos = projection * view * model * vec4(a_pos, 1);
+
+        gl_Position = pos;
+      }
+    `,
+
+    frag: `
+      precision mediump float;
+      uniform vec3 color;
+
+      void main () {
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `,
+
+    primitive: 'lines',
+
+    attributes: {
+      a_pos: regl.prop('line'),
+    },
+
+    uniforms: {
+      model: regl.prop('transform'),
+      color: regl.prop('color')
+    },
+
+    count: 2,
+  });
+
+  const identity = vmath.mat4.array(new Float32Array(16), vmath.mat4.create());
+  const line_x = [ [0, 0, 0], [1, 0, 0] ];
+  const line_y = [ [0, 0, 0], [0, 1, 0] ];
+  const line_z = [ [0, 0, 0], [0, 0, 1] ];
+  const color_r = [1, 0, 0];
+  const color_g = [0, 1, 0];
+  const color_b = [0, 0, 1];
+
+  return function (transform) {
+    transform = transform || identity;
+    drawLine([
+      { line: line_x, color: color_r, transform },
+      { line: line_y, color: color_g, transform },
+      { line: line_z, color: color_b, transform },
+    ]);
+  };
+}
+
+let m4_a = vmath.mat4.create();
+let array_m4 = new Float32Array(16);
+
+class Renderer {
+  constructor (canvasEL) {
+    this._canvasEL = canvasEL;
+    this._regl = REGL({
+      canvas: canvasEL,
+      extensions: [
+        'webgl_depth_texture',
+        'OES_texture_float',
+        'OES_texture_float_linear',
+        'OES_standard_derivatives'
+      ]
+    });
+    this._uniforms = {};
+
+    // init commands
+    this._common = common(this._regl);
+    this._drawGrid = grid(this._regl, 100, 100, 100);
+    this._drawCoord = coord(this._regl);
+
+    //
+    this._nodes = [];
+    this._nodesCnt = 0;
+  }
+
+  resize() {
+    let bcr = this._canvasEL.parentElement.getBoundingClientRect();
+    this._canvasEL.width = bcr.width;
+    this._canvasEL.height = bcr.height;
+  }
+
+  setUniform(name, val) {
+    this._uniforms[name] = val;
+  }
+
+  drawNode(node) {
+    this._nodes[this._nodesCnt] = node;
+    this._nodesCnt++;
+  }
+
+  frame(cb) {
+    this._regl.frame(ctx => {
+      this._reset();
+
+      //
+      if (cb) {
+        cb(ctx);
+      }
+
+      // clear contents of the drawing buffer
+      this._regl.clear({
+        color: [0.3, 0.3, 0.3, 1],
+        depth: 1
+      });
+
+      // draw
+      this._common(this._uniforms, () => {
+        for (let i = 0; i < this._nodesCnt; ++i) {
+          let node = this._nodes[i];
+          node.getWorldMatrix(m4_a);
+          vmath.mat4.array(array_m4, m4_a);
+          this._drawCoord(array_m4);
+        }
+
+        // this._drawCoord();
+        this._drawGrid();
+      });
+    });
+  }
+
+  _reset() {
+    this._nodesCnt = 0;
+  }
+}
+
+class Shell {
+  constructor ( canvasEL ) {
+    this._renderer = new Renderer(canvasEL);
+    this._input = new Input(canvasEL, {
+      lock: true
+    });
+    this._orbit = new Orbit(this._input, {
+      eye: vmath.vec3.new(0, 5, 10),
+      phi: vmath.toRadian(-30),
+    });
+    this._last = 0;
+    this._dt = 0;
+    this._time = 0;
+
+    // on window-resize
+    window.addEventListener('resize', () => {
+      this.resize();
+    });
+
+    window.requestAnimationFrame(() => {
+      this.resize();
+    });
+  }
+
+  frame (cb) {
+    this._renderer.frame(({time, viewportWidth, viewportHeight}) => {
+      let dt = time - this._last;
+      this._last = time;
+      this._dt = dt;
+      this._time = time;
+
+      if (cb) {
+        cb();
+      }
+
+      this._orbit.tick(dt, viewportWidth, viewportHeight);
+      this._renderer.setUniform('view', this._orbit._cache.view);
+      this._renderer.setUniform('projection', this._orbit._cache.proj);
+
+      this._input.reset();
+    });
+  }
+
+  resize () {
+    this._renderer.resize();
+    this._input.resize();
+  }
+}
+
+exports.Orbit = Orbit;
+exports.Renderer = Renderer;
+exports.Shell = Shell;
+
+}((this.ddraw = this.ddraw || {}),window.vmath,window.createREGL,window.Input));
 //# sourceMappingURL=debug-draw.dev.js.map

@@ -28,11 +28,13 @@ module.exports = {
   banner,
   external: [
     'input',
-    'vmath'
+    'vmath',
+    'regl'
   ],
   globals: {
-    'input': 'window.input',
-    'vmath': 'window.vmath'
+    'input': 'window.Input',
+    'vmath': 'window.vmath',
+    'regl': 'window.createREGL'
   },
   sourceMap: true,
 };

@@ -4,72 +4,34 @@ document.addEventListener('readystatechange', () => {
   }
 
   // modules
-  const Input = window.Input;
   const vmath = window.vmath;
   const ddraw = window.ddraw;
+  const sg = window.sg;
 
   // init global
   let canvasEL = document.getElementById('canvas');
-  const regl = window.createREGL({
-    canvas: document.getElementById('canvas'),
-    extensions: [
-      'webgl_depth_texture',
-      'OES_texture_float',
-      'OES_texture_float_linear',
-      'OES_standard_derivatives'
-    ]
-  });
-  let input = new Input(canvasEL, {
-    lock: true
-  });
-  let last = 0;
+  let shell = new ddraw.Shell(canvasEL);
+  let renderer = shell._renderer;
 
-  // init darw commands
-  let common = ddraw.common(regl);
-  let drawGrid = ddraw.grid(regl, 100, 100, 100);
-  let drawCoord = ddraw.coord(regl);
-  let orbit = new ddraw.Orbit(input, {
-    eye: vmath.vec3.new(0, 5, 10),
-    phi: vmath.toRadian(-30),
-  });
+  // init scene
+  let root = new sg.Node('root');
+  let n0 = new sg.Node('n0');
+  n0.lpos = vmath.vec3.new(5, 5, 5);
 
-  // on window-resize
-  window.addEventListener('resize', () => {
-    _resize();
-  });
+  let n1 = new sg.Node('n1');
+  n1.lpos = vmath.vec3.new(-5, 5, -5);
 
-  window.requestAnimationFrame(() => {
-    _resize();
-  });
+  root.append(n0);
+  root.append(n1);
+  let list = sg.utils.flat(root);
 
-  function _resize () {
-    let bcr = canvasEL.parentElement.getBoundingClientRect();
-    canvasEL.width = bcr.width;
-    canvasEL.height = bcr.height;
-    input.resize();
-  }
+  // frame
+  shell.frame(() => {
+    vmath.quat.rotateY(root.lrot, root.lrot, vmath.toRadian(1));
+    vmath.quat.rotateX(n0.lrot, n0.lrot, vmath.toRadian(5));
 
-  // render
-  regl.frame(({time, viewportWidth, viewportHeight}) => {
-    let dt = time - last;
-    last = time;
-    orbit.tick(dt, viewportWidth, viewportHeight);
-
-    //
-    input.reset();
-
-    // clear contents of the drawing buffer
-    regl.clear({
-      color: [0.3, 0.3, 0.3, 1],
-      depth: 1
-    });
-
-    common({
-      view: orbit._cache.view,
-      projection: orbit._cache.proj,
-    }, () => {
-      drawCoord();
-      drawGrid();
+    list.forEach(node => {
+      renderer.drawNode(node);
     });
   });
 });
