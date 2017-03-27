@@ -274,17 +274,21 @@ function coord (regl) {
       uniform mat4 model, view, projection;
 
       attribute vec3 a_pos;
+      attribute vec3 a_color;
+
+      varying vec3 color;
 
       void main() {
         vec4 pos = projection * view * model * vec4(a_pos, 1);
 
         gl_Position = pos;
+        color = a_color;
       }
     `,
 
     frag: `
       precision mediump float;
-      uniform vec3 color;
+      varying vec3 color;
 
       void main () {
         gl_FragColor = vec4(color, 1.0);
@@ -295,23 +299,23 @@ function coord (regl) {
 
     attributes: {
       a_pos: regl.prop('line'),
+      a_color: regl.prop('color'),
     },
 
     uniforms: {
       model: regl.prop('transform'),
-      color: regl.prop('color')
     },
 
     count: 2,
   });
 
   const identity = vmath.mat4.array(new Float32Array(16), vmath.mat4.create());
-  const line_x = [ [0, 0, 0], [1, 0, 0] ];
-  const line_y = [ [0, 0, 0], [0, 1, 0] ];
-  const line_z = [ [0, 0, 0], [0, 0, 1] ];
-  const color_r = [1, 0, 0];
-  const color_g = [0, 1, 0];
-  const color_b = [0, 0, 1];
+  const line_x = [ [0, 0, 0], [0.5, 0, 0] ];
+  const line_y = [ [0, 0, 0], [0, 0.5, 0] ];
+  const line_z = [ [0, 0, 0], [0, 0, 0.5] ];
+  const color_r = [ [1, 0, 0], [0.5, 0, 0] ];
+  const color_g = [ [0, 1, 0], [0, 0.5, 0] ];
+  const color_b = [ [0, 0, 1], [0, 0, 0.5] ];
 
   return function (transform) {
     transform = transform || identity;
@@ -384,7 +388,7 @@ class Renderer {
       this._common(this._uniforms, () => {
         for (let i = 0; i < this._nodesCnt; ++i) {
           let node = this._nodes[i];
-          node.getWorldMatrix(m4_a);
+          node._getWorldRT(m4_a);
           vmath.mat4.array(array_m4, m4_a);
           this._drawCoord(array_m4);
         }
