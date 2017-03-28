@@ -6,7 +6,7 @@ document.addEventListener('readystatechange', () => {
   // modules
   const vmath = window.vmath;
   const ddraw = window.ddraw;
-  const sg = window.sg;
+  const sgraph = window.sgraph;
 
   // init global
   let canvasEL = document.getElementById('canvas');
@@ -14,16 +14,16 @@ document.addEventListener('readystatechange', () => {
   let renderer = shell._renderer;
 
   // init scene
-  let root = new sg.Node('root');
-  let n0 = new sg.Node('n0');
+  let root = new sgraph.Node('root');
+  let n0 = new sgraph.Node('n0');
   n0.lpos = vmath.vec3.new(5, 0.5, 0);
 
-  let n1 = new sg.Node('n1');
+  let n1 = new sgraph.Node('n1');
   n1.lpos = vmath.vec3.new(2, 0, 0);
 
   root.append(n0);
   n0.append(n1);
-  let list = sg.utils.flat(root);
+  let list = sgraph.utils.flat(root);
 
   let rot = vmath.quat.create();
 
