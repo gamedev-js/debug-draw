@@ -1,25 +1,11 @@
 ## Debug Renderer
 
-A simple renderer support several debug draw.
+A simple renderer support several debug draw methods.
 
 ## Install
 
 ```bash
 npm install debug-draw
-```
-
-## Usage
-
-```javascript
-import drend from 'debug-draw';
-
-function animate() {
-  // do something
-
-  drend.flush();
-  requestAnimationFrame(animate);
-}
-requestAnimationFrame(animate);
 ```
 
 ## Documentation

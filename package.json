@@ -1,7 +1,7 @@
 {
   "name": "debug-draw",
   "version": "1.0.0",
-  "description": "A simple renderer support several debug draw.",
+  "description": "A simple renderer support several debug draw methods.",
   "main": "dist/debug-draw.js",
   "scripts": {
     "build:dev": "rollup -c ./script/rollup.config.js",
@@ -37,6 +37,7 @@
     "electron": "^1.6.3",
     "fs-jetpack": "^0.13.0",
     "preview-server": "^1.0.7",
+    "pstats.js": "^1.1.0",
     "rollup": "^0.41.4",
     "uglify-js": "git+https://github.com/mishoo/UglifyJS2.git#harmony"
   }

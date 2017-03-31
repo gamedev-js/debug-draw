@@ -738,6 +738,10 @@ progress-stream@^1.1.0:
     speedometer "~0.1.2"
     through2 "~0.2.3"
 
+pstats.js@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/pstats.js/-/pstats.js-1.1.0.tgz#7f149c0ddee2c0241c7ce273d1d7233c75749535"
+
 punycode@^1.4.1:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-1.4.1.tgz#c0d5a63b2718800ad8e1eb0fa5269c84dd41845e"
@@ -1065,11 +1069,7 @@ verror@1.3.6:
   dependencies:
     extsprintf "1.0.2"
 
-vmath@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/vmath/-/vmath-1.0.1.tgz#ede67007c324124222d6d42124a1246c065d66c8"
-
-vmath@^1.1.1:
+vmath@^1.0.1, vmath@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/vmath/-/vmath-1.1.1.tgz#5e41f109ff368ab11bc27458ee3185b451241522"
 

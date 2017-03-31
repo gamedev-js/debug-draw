@@ -327,6 +327,41 @@ function coord (regl) {
   };
 }
 
+function line (regl) {
+  let identity = vmath.mat4.array(new Float32Array(16), vmath.mat4.create());
+
+  return regl({
+    vert: `
+      precision mediump float;
+      uniform mat4 model, view, projection;
+
+      attribute vec3 a_pos;
+
+      void main() {
+        vec4 pos = projection * view * vec4(a_pos, 1);
+
+        gl_Position = pos;
+      }
+    `,
+
+    frag: `
+      precision mediump float;
+
+      void main () {
+        gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+      }
+    `,
+
+    primitive: 'lines',
+
+    attributes: {
+      a_pos: regl.prop('line'),
+    },
+
+    count: 2,
+  });
+}
+
 let m4_a = vmath.mat4.create();
 let array_m4 = new Float32Array(16);
 
@@ -348,10 +383,13 @@ class Renderer {
     this._common = common(this._regl);
     this._drawGrid = grid(this._regl, 100, 100, 100);
     this._drawCoord = coord(this._regl);
+    this._drawLine = line(this._regl);
 
     //
     this._nodes = [];
     this._nodesCnt = 0;
+    this._destPosList = [];
+    this._destPosCnt = 0;
   }
 
   resize() {
@@ -367,6 +405,11 @@ class Renderer {
   drawNode(node) {
     this._nodes[this._nodesCnt] = node;
     this._nodesCnt++;
+  }
+
+  drawDestPos(pos) {
+    this._destPosList[this._destPosCnt] = pos;
+    this._destPosCnt++;
   }
 
   frame(cb) {
@@ -393,7 +436,13 @@ class Renderer {
           this._drawCoord(array_m4);
         }
 
-        // this._drawCoord();
+        for (let i = 0; i < this._destPosCnt; ++i) {
+          let pos = this._destPosList[i];
+          this._drawLine({
+            line: [[pos.x, pos.y, pos.z], [pos.x, pos.y + 1.0, pos.z]]
+          });
+        }
+
         this._drawGrid();
       });
     });
@@ -401,6 +450,7 @@ class Renderer {
 
   _reset() {
     this._nodesCnt = 0;
+    this._destPosCnt = 0;
   }
 }
 
