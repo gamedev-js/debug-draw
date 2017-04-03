@@ -39,6 +39,7 @@
     "preview-server": "^1.0.7",
     "pstats.js": "^1.1.0",
     "rollup": "^0.41.4",
+    "rollup-watch": "^3.2.2",
     "uglify-js": "git+https://github.com/mishoo/UglifyJS2.git#harmony"
   }
 }
