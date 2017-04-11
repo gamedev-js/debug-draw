@@ -393,6 +393,9 @@ class Renderer {
     this._nodesCnt = 0;
     this._destPosList = [];
     this._destPosCnt = 0;
+
+    this._draws = [];
+    this._drawsCnt = 0;
   }
 
   resize() {
@@ -415,6 +418,11 @@ class Renderer {
     this._destPosCnt++;
   }
 
+  addCommand(cmd, data) {
+    this._draws[this._drawsCnt] = { cmd, data };
+    this._drawsCnt++;
+  }
+
   frame(cb) {
     this._regl.frame(ctx => {
       this._reset();
@@ -432,6 +440,11 @@ class Renderer {
 
       // draw
       this._common(this._uniforms, () => {
+        for (let i = 0; i < this._drawsCnt; ++i) {
+          let draw = this._draws[i];
+          draw.cmd(draw.data);
+        }
+
         for (let i = 0; i < this._nodesCnt; ++i) {
           let node = this._nodes[i];
           node._getWorldRT(m4_a);
@@ -452,6 +465,7 @@ class Renderer {
   }
 
   _reset() {
+    this._drawsCnt = 0;
     this._nodesCnt = 0;
     this._destPosCnt = 0;
   }
