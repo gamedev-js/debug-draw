@@ -1,6 +1,6 @@
 
 /*
- * debug-draw v1.0.0
+ * debug-draw v1.1.0
  * (c) 2017 @Johnny Wu
  * Released under the MIT License.
  */
@@ -331,8 +331,6 @@ function coord (regl) {
 }
 
 function line (regl) {
-  let identity = vmath.mat4.array(new Float32Array(16), vmath.mat4.create());
-
   return regl({
     vert: `
       precision mediump float;
@@ -396,6 +394,9 @@ class Renderer {
 
     this._draws = [];
     this._drawsCnt = 0;
+
+    this._drawsTransparent = [];
+    this._drawsTransparentCnt = 0;
   }
 
   resize() {
@@ -418,9 +419,14 @@ class Renderer {
     this._destPosCnt++;
   }
 
-  addCommand(cmd, data) {
-    this._draws[this._drawsCnt] = { cmd, data };
-    this._drawsCnt++;
+  addCommand(cmd, data, transparent = false) {
+    if (transparent) {
+      this._drawsTransparent[this._drawsTransparentCnt] = { cmd, data };
+      this._drawsTransparentCnt++;
+    } else {
+      this._draws[this._drawsCnt] = { cmd, data };
+      this._drawsCnt++;
+    }
   }
 
   frame(cb) {
@@ -460,12 +466,19 @@ class Renderer {
         }
 
         this._drawGrid();
+
+        for (let i = 0; i < this._drawsTransparentCnt; ++i) {
+          let draw = this._drawsTransparent[i];
+          draw.cmd(draw.data);
+        }
+
       });
     });
   }
 
   _reset() {
     this._drawsCnt = 0;
+    this._drawsTransparentCnt = 0;
     this._nodesCnt = 0;
     this._destPosCnt = 0;
   }
@@ -485,6 +498,10 @@ class Shell {
     this._dt = 0;
     this._time = 0;
 
+    this._invView = vmath.mat4.create();
+    this._invViewArray = new Float32Array(16);
+
+
     // on window-resize
     window.addEventListener('resize', () => {
       this.resize();
@@ -498,6 +515,12 @@ class Shell {
   frame (cb) {
     this._renderer.frame(({time, viewportWidth, viewportHeight}) => {
       let dt = time - this._last;
+
+      // smooth delta time
+      if (dt > 1) {
+        dt = 1;
+      }
+
       this._last = time;
       this._dt = dt;
       this._time = time;
@@ -509,6 +532,12 @@ class Shell {
       this._orbit.tick(dt, viewportWidth, viewportHeight);
       this._renderer.setUniform('view', this._orbit._cache.view);
       this._renderer.setUniform('projection', this._orbit._cache.proj);
+
+
+      // inv-view
+      vmath.mat4.invert(this._invView, this._orbit._view);
+      vmath.mat4.array(this._invViewArray, this._invView);
+      this._renderer.setUniform('invView', this._invViewArray);
 
       this._input.reset();
     });
