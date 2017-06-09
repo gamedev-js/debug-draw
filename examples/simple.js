@@ -4,27 +4,19 @@ document.addEventListener('readystatechange', () => {
   }
 
   // modules
-  const pstats = window.pstats;
   const vmath = window.vmath;
   const ddraw = window.ddraw;
   const sgraph = window.sgraph;
 
-  let stats = pstats.new(document.body, {
-    values: {
-      fps: { desc: 'Framerate (FPS)', below: 30, average: 500 },
-      memory: { desc: 'Memory', extension: 'memory.used', average: 1000 },
-      drawcalls: { desc: 'Draw Calls', extension: 'webgl.drawcalls' },
-      programs: { desc: 'Programs Used', extension: 'webgl.programs' },
-    },
-    extensions: [
-      'memory', 'webgl'
-    ],
-  });
+  let stats = new window.LStats(document.body);
+  let glStats = new window.GLStats(document.body);
 
   // init global
   let canvasEL = document.getElementById('canvas');
   let shell = new ddraw.Shell(canvasEL);
   let renderer = shell._renderer;
+
+  glStats.inspect(renderer._regl._gl);
 
   // init scene
   let root = new sgraph.Node('root');
@@ -42,7 +34,7 @@ document.addEventListener('readystatechange', () => {
 
   // frame
   shell.frame(() => {
-    stats('fps').frame();
+    glStats.reset();
 
     vmath.quat.rotateY(root.lrot, root.lrot, vmath.toRadian(1));
     vmath.quat.rotateX(n0.lrot, n0.lrot, vmath.toRadian(5));
@@ -53,9 +45,6 @@ document.addEventListener('readystatechange', () => {
       renderer.drawNode(node);
     });
 
-    stats('memory').snapshot();
-    stats('drawcalls').snapshot();
-    stats('programs').snapshot();
-    stats().tick();
+    stats.tick();
   });
 });
