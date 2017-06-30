@@ -30,6 +30,11 @@ document.addEventListener('readystatechange', () => {
   n0.append(n1);
   let list = sgraph.utils.flat(root);
 
+  let nn = new sgraph.Node('nn');
+  nn.lpos = vmath.vec3.new(3, 2, 0);
+  list.push(nn);
+
+  let wpos = vmath.vec3.create();
   let rot = vmath.quat.create();
 
   // frame
@@ -40,6 +45,7 @@ document.addEventListener('readystatechange', () => {
     vmath.quat.rotateX(n0.lrot, n0.lrot, vmath.toRadian(5));
 
     n1.setWorldRot(rot);
+    nn.lookAt(n0.getWorldPos(wpos));
 
     list.forEach(node => {
       renderer.drawNode(node);
